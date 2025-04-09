@@ -1,23 +1,35 @@
 {
   description = "create2nix test flake";
   inputs = {
-    rust-overlay.url = "github:oxalica/rust-overlay";
+    #rust-overlay.url = "github:oxalica/rust-overlay";
     crate2nix.url = "github:nix-community/crate2nix";
+    #nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-24.11";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
-  { self, nixpkgs, flake-utils, rust-overlay, crate2nix }:
+  { self, nixpkgs, flake-utils, crate2nix, fenix }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
-          overlays = [ (import rust-overlay) ];
+          toolchain = fenix.packages.${system}.stable.defaultToolchain;
           pkgs = import nixpkgs {
-            inherit system overlays;
+            inherit system;
+            overlays = [
+              (final: prev: {
+                rustc = toolchain;
+                cargo = toolchain;
+              })
+            ];
           };
-          rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
           platform_packages = [];
           crate2nix' = pkgs.callPackage (import "${crate2nix}/tools.nix") {};
+          #cargoNix = pkgs.callPackage ./Cargo.nix {};
           cargoNix = crate2nix'.appliedCargoNix {
-            name = "my-crate";
+            name = "trunk";
             src = ./.;
           };
         in
@@ -26,7 +38,8 @@
           packages.default = cargoNix.rootCrate.build;
           devShells.default = mkShell {
             buildInputs = [
-              rust
+              #pkgs.rustc
+              #pkgs.cargo
             ];
           };
         }
