@@ -15,13 +15,13 @@
     flake-utils.lib.eachDefaultSystem
       (system:
         let
-          toolchain = fenix.packages.${system}.stable.defaultToolchain;
+          completeToolchain = fenix.packages.${system}.beta.completeToolchain;
           pkgs = import nixpkgs {
             inherit system;
             overlays = [
               (final: prev: {
-                rustc = toolchain;
-                cargo = toolchain;
+                rust = completeToolchain;
+                cargo = completeToolchain;
               })
             ];
           };
@@ -38,6 +38,7 @@
           packages.default = cargoNix.rootCrate.build;
           devShells.default = mkShell {
             buildInputs = [
+              completeToolchain
               #pkgs.rustc
               #pkgs.cargo
             ];
