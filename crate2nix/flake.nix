@@ -35,7 +35,17 @@
         in
         with pkgs;
         rec {
-          packages.default = cargoNix.rootCrate.build;
+          packages.default = cargoNix.rootCrate.build.override {
+            crateOverrides = pkgs.defaultCrateOverrides // {
+              # crate2nix's enableFeatures turns the optional dep behind
+              # "nodejs = [ dep:serde ]" into a "serde" feature, which cargo
+              # does not do. that compiles the lightningcss serde code without
+              # smallvec/serde, parcel_selectors/serde and into_owned.
+              lightningcss = attrs: {
+                features = builtins.filter (f: f != "serde") attrs.features;
+              };
+            };
+          };
           devShells.default = mkShell {
             buildInputs = [
               completeToolchain

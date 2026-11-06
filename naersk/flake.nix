@@ -34,7 +34,7 @@
               rev = "v0.21.4";
               sha256 = "sha256-tU0Xob0dS1+rrfRVitwOe0K1AG05LHlGPHhFL0yOjxM=";
             };
-            cargo_test_options = "--skip=tools::tests::download_and_install_binaries";
+            cargo_test_options = "--skip=tools::tests::download_and_install_binaries ";
           };
 
           packages.default = trunk;
